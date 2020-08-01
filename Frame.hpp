@@ -14,9 +14,7 @@ struct Frame: public sf::Drawable {
         walls = initWalls();
     }
     
-    Frame(){
-        
-    }
+    Frame(){}
 
     std::vector<sf::RectangleShape> initWalls(){
         auto windowSize = window->getSize();

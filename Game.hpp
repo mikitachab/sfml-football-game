@@ -1,5 +1,8 @@
 #include "Frame.hpp"
+#include "InputMap.hpp"
+
 #include <SFML/Graphics.hpp>
+
 
 #include <iostream>
 
@@ -8,12 +11,13 @@ const auto TITLE = "SFML Haxball";
 const auto PLAYER_SIZE = 30;
 
 
-
 struct Game {
     sf::RenderWindow* window;
     sf::Vector2u windowSize;
     Frame frame;
+
     sf::CircleShape player;
+    float moveSpeed{0.1};
 
     Game(sf::RenderWindow* window, sf::Vector2u windowSize) : window(window), windowSize(windowSize){
         window->create(sf::VideoMode(windowSize.x, windowSize.y), TITLE);
@@ -26,8 +30,6 @@ struct Game {
         auto center = sf::Vector2f(window->getSize().x / 2, window->getSize().y / 2);
         player.setPosition(sf::Vector2f(center.x - player.getRadius(), center.y - player.getRadius()));
     }
-
-    
 
     void handleWindowEvents(){
         sf::Event event;
@@ -44,23 +46,45 @@ struct Game {
         }
     }
 
+    bool isPlayerCollidingWithWalls(){
+        for (const auto wall : frame.walls){
+            if (player.getGlobalBounds().intersects(wall.getGlobalBounds())){
+                return true;
+            } 
+        }
+        return false;
+    }
+
     void handleInput(){
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+        sf::Vector2f moveVector = getMoveVector();
+        sf::Vector2f oldPosition = player.getPosition();
+        player.move(moveVector);
+        if (isPlayerCollidingWithWalls()) {
+            player.setPosition(oldPosition);
+        }
+    }
+
+    sf::Vector2f getMoveVector(){
+        float x = 0;
+        float y = 0;
+        
+        if (InputMap::left())
         {   
-            player.move(-0.1f, 0.f);
+            x -= moveSpeed;
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+        if (InputMap::right())
         {
-            player.move(0.1f, 0.f);
+            x += moveSpeed;  
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+        if (InputMap::up())
         {
-            player.move(0.0f, -0.1f);
+            y -= moveSpeed;
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+        if (InputMap::down())
         {
-            player.move(0.0f, 0.1f);
+            y += moveSpeed;
         }
+        return sf::Vector2f(x,y);
     }
 
     void UpdateAndDraw(){
